@@ -5,9 +5,12 @@ import warnings
 import cloudpickle
 from joblib import Parallel, delayed
 import pandas as pd
+from toolz import compose
 from toolz.curried import assoc, curry, dissoc, first, map, partial, pipe
+from toolz.functoolz import identity
 
-from fklearn.types import EvalFnType, LearnerFnType, LogType, SplitterFnType, ValidatorReturnType
+from fklearn.types import EvalFnType, LearnerFnType, LogType
+from fklearn.types import SplitterFnType, ValidatorReturnType, PerturbFnType
 
 
 def validator_iteration(data: pd.DataFrame,
@@ -78,7 +81,9 @@ def validator_iteration(data: pd.DataFrame,
 def validator(train_data: pd.DataFrame,
               split_fn: SplitterFnType,
               train_fn: LearnerFnType,
-              eval_fn: EvalFnType) -> ValidatorReturnType:
+              eval_fn: EvalFnType,
+              perturb_fn_train: PerturbFnType = identity,
+              perturb_fn_test: PerturbFnType = identity) -> ValidatorReturnType:
     """
     Splits the training data into folds given by the split function and
     performs a train-evaluation sequence on each fold by calling
@@ -104,6 +109,16 @@ def validator(train_data: pd.DataFrame,
         A partially defined evaluation function that takes a dataset with prediction and
         returns the evaluation logs.
 
+    perturb_fn_train : PerturbFnType
+        A partially defined corruption function that takes a dataset and returns
+        a corrupted dataset. Perturbation applied at train-time.
+    #TODO Logs?
+
+    perturb_fn_test : PerturbFnType
+        A partially defined corruption function that takes a dataset and returns
+        a corrupted dataset. Perturbation applied at test-time.
+    #TODO Logs?
+
     predict_oof : bool
         Whether to return out of fold predictions on the logs
 
@@ -113,6 +128,9 @@ def validator(train_data: pd.DataFrame,
     """
 
     folds, logs = split_fn(train_data)
+
+    train_fn = compose(train_fn, perturb_fn_train)
+    eval_fn = compose(eval_fn, perturb_fn_test)
 
     def fold_iter(fold: Tuple[int, Tuple[pd.Index, pd.Index]]) -> LogType:
         (fold_num, (train_index, test_indexes)) = fold
