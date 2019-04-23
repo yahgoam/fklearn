@@ -6,7 +6,7 @@
 [![CircleCI](https://circleci.com/gh/nubank/fklearn.svg?style=svg)](https://circleci.com/gh/nubank/fklearn)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-**fklearn** uses functional programming principles to make it easier to solve real business problems using Machine Learning.
+**fklearn** uses functional programming principles to make it easier to solve real problems with Machine Learning.
 
 The name is a reference to the widely known [scikit-learn](https://scikit-learn.org/stable/) library.
 
